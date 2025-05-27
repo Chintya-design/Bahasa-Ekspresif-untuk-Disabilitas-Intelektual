@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bahasa Ekspresif</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial; text-align: center; background-color: #f0f8ff; padding: 20px; margin: 0; }
+    button {
+      font-size: 18px; padding: 10px 20px; margin: 10px;
+      border-radius: 10px; border: none; color: white;
+      display: inline-flex; align-items: center; gap: 10px;
+    }
+    .card { background: white; padding: 20px; margin: 20px auto;
+      border-radius: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 90%; max-width: 600px; }
+    .trace-text { font-size: 24px; letter-spacing: 4px; color: gray;
+      border-bottom: 1px dashed black; padding: 10px; margin: 20px 0; }
+    canvas { border: 2px solid #ccc; border-radius: 10px; touch-action: none; }
+    .btn-latihan { background-color: #4CAF50; }
+    .btn-bersih { background-color: #9E9E9E; }
+    .btn-mode { background-color: #2196F3; }
+    .btn-eraser { background-color: #f44336; }
+  </style>
+</head>
+<body>
+
+  <!-- Audio klik -->
+  <audio id="clickSound" src="klik.opus" preload="auto"></audio>
+
+  <h1>Bahasa Ekspresif</h1>
+
+  <div class="card">
+    <h2 id="promptText">Klik untuk mulai latihan bicara!</h2>
+    <button class="btn-latihan" onclick="playClick(); nextSpeakingPrompt()">🗣 Bicara</button>
+  </div>
+
+  <div class="card">
+    <h2>Menulis (Salin Kalimat)</h2>
+    <p id="traceText" class="trace-text">Klik untuk mulai menulis</p>
+    <button class="btn-latihan" onclick="playClick(); nextWritingPrompt()">✍ Menulis</button><br>
+
+    <canvas id="writingCanvas" width="500" height="300"></canvas><br>
+
+    <button class="btn-mode" onclick="playClick(); setMode('draw')">✏ Mode Menulis</button>
+    <button class="btn-eraser" onclick="playClick(); setMode('erase')">🧽 Mode Penghapus</button>
+    <button class="btn-bersih" onclick="playClick(); clearCanvas()">🗑 Bersihkan Semua</button>
+  </div>
+
+  <script>
+    const clickSound = document.getElementById("clickSound");
+
+    function playClick() {
+      clickSound.currentTime = 0;
+      clickSound.play();
+    }
+
+    const speakingPrompts = [
+      "Katakan: Aku suka ayam goreng", "Katakan: Dina makan roti", "Katakan: Rudi bermain bola",
+      "Katakan: Aku ingin tidur", "Katakan: Kamu baca buku", "Katakan: Ibu memeluk Dina",
+      "Katakan: Andi menendang bola", "Katakan: Kita nyanyi lagu", "Katakan: Budi menggambar kucing",
+      "Katakan: Cuci tangan dulu!", "Katakan: Maaf aku salah", "Katakan: Siska minum susu",
+      "Katakan: Tina punya boneka", "Katakan: Ali mendorong kursi", "Katakan: Aku mencari mainan",
+      "Katakan: Lani mengambil pensil", "Katakan: Aku melihat kucing", "Katakan: Aku makan",
+      "Katakan: Aku ingin minum", "Katakan: Aku kebelet pipis", "Katakan: Aku ingin ke kamar mandi",
+      "Katakan: Aku minta maaf", "Katakan: Terima kasih", "Katakan: Permisi",
+      "Katakan: Aku minta tolong", "Katakan: Aku ingin pulang", "Katakan: Kamu hebat",
+    ];
+ 
+    const writingPrompts = [
+      "Aku suka ayam goreng", "Dina makan roti", "Rudi bermain bola", "Aku ingin tidur",
+      "Kamu baca buku", "Ibu memeluk Dina", "Andi menendang bola", "Kita nyanyi lagu",
+      "Budi menggambar kucing", "Cuci tangan dulu!", "Maaf aku salah", "Siska minum susu", "Tina punya boneka", 
+      "Ali mendorong kursi", "Aku mencari mainan", "Lani mengambil pensil", "Aku melihat kucing", "Aku makan",
+      "Aku ingin minum", "Aku kebelet pipis", Aku ingin ke kamar mandi", "Aku minta maaf", "Terima kasih",
+      "Permisi", "Aku minta tolong", Aku ingin pulang", "Kamu hebat",
+    ];
+
+    function nextSpeakingPrompt() {
+      const randomPrompt = speakingPrompts[Math.floor(Math.random() * speakingPrompts.length)];
+      document.getElementById("promptText").innerText = randomPrompt;
+    }
+
+    function nextWritingPrompt() {
+      const randomPrompt = writingPrompts[Math.floor(Math.random() * writingPrompts.length)];
+      document.getElementById("traceText").innerText = randomPrompt;
+      clearCanvas();
+    }
+
+    const canvas = document.getElementById('writingCanvas');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    let mode = 'draw';
+
+    function getPos(e) {
+      if (e.touches) {
+        return {
+          x: e.touches[0].clientX - canvas.getBoundingClientRect().left,
+          y: e.touches[0].clientY - canvas.getBoundingClientRect().top
+        };
+      } else {
+        return {
+          x: e.clientX - canvas.getBoundingClientRect().left,
+          y: e.clientY - canvas.getBoundingClientRect().top
+        };
+      }
+    }
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('touchstart', startDraw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseleave', endDraw);
+    canvas.addEventListener('touchend', endDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('touchmove', draw);
+
+    function startDraw(e) {
+      e.preventDefault();
+      drawing = true;
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    }
+
+    function endDraw(e) {
+      e.preventDefault();
+      drawing = false;
+      ctx.beginPath();
+    }
+
+    function draw(e) {
+      e.preventDefault();
+      if (!drawing) return;
+      const pos = getPos(e);
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = (mode === 'erase') ? '#f0f8ff' : 'blue';
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    }
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function setMode(m) {
+      mode = m;
+    }
+  </script>
+
+</body>
+</html>
